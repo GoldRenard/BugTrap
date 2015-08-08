@@ -168,6 +168,16 @@ pip-log.txt
 #################
 ## Project-specific
 #################
+lib/zlib/dll-debug/
+lib/zlib/dll-debug-x64/
+lib/zlib/dll-release/
+lib/zlib/dll-release-x64/
+lib/zlib/stat-debug/
+lib/zlib/stat-debug-x64/
+lib/zlib/stat-release/
+lib/zlib/stat-release-x64/
+lib/zlib/stat-md-debug/
+lib/zlib/stat-md-debug-x64/
 lib/zlib/stat-md-release/
 lib/zlib/stat-md-release-x64/
 source/Debug/
