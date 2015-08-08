@@ -494,6 +494,8 @@ private:
 	void GetProcessList(CUTF8EncStream& rEncStream, CEnumProcess* pEnumProcess);
 	/// Get process info for specified process.
 	void GetProcessList(CXmlWriter& rXmlWriter, CEnumProcess* pEnumProcess);
+	/// Get Windows Version.
+	static BOOL GetWindowsVersion(DWORD& major, DWORD& minor, DWORD& build);
 	/// Get OS information.
 	static void GetOsInfo(COsInfo& rOsInfo);
 	/// Get description of system CPUs.

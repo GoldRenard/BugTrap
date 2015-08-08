@@ -1146,6 +1146,33 @@ void CSymEngine::GetCpuString(CUTF8EncStream& rEncStream)
 	rEncStream.WriteUTF8Bin(Stream);
 }
 
+BOOL CSymEngine::GetWindowsVersion(DWORD& major, DWORD& minor, DWORD& build)
+{
+	DWORD version_buf_len, handle;
+	if ((version_buf_len = GetFileVersionInfoSize(_T("kernel32.dll"), &handle)) != 0)
+	{
+		BYTE *version_buf = new BYTE[version_buf_len];
+		if (GetFileVersionInfo(_T("kernel32.dll"), 0, version_buf_len, version_buf))
+		{
+			VS_FIXEDFILEINFO *p_verinfo = NULL;
+			UINT len = 0;
+			if (VerQueryValue(version_buf, _T("\\"), reinterpret_cast<LPVOID *>(&p_verinfo), &len))
+			{
+				if (p_verinfo->dwSignature == 0XFEEF04BD)
+				{
+					major = (p_verinfo->dwProductVersionMS >> 16) & 0XFFFF;
+					minor = p_verinfo->dwProductVersionMS & 0XFFFF;
+					build = (p_verinfo->dwProductVersionLS >> 16) & 0XFFFF;
+					delete[] version_buf;
+					return true;
+				}
+			}
+		}
+		delete[] version_buf;
+	}
+	return false;
+}
+
 /**
  * @param rOsInfo - OS information.
  */
@@ -1182,7 +1209,13 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 	GetSystemInfo(&sysi);
 	
 	rOsInfo.m_pszWinVersion = szUnknown;
-	
+
+	BOOL deprecated_GetVersionEx = FALSE;
+	DWORD realMajorVersion;
+	DWORD realMinorVersion;
+	DWORD realBuildVersion;
+	GetWindowsVersion(realMajorVersion, realMinorVersion, realBuildVersion);
+
 	switch (osvi.dwMajorVersion)
 	{
 	case 3:
@@ -1233,6 +1266,10 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 		}
 		break;
 	case 6:
+		if (realMajorVersion != 6 || realMinorVersion > 2) {
+			deprecated_GetVersionEx = TRUE;
+			break;
+		}
 		if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
 		{
 			switch (osvi.dwMinorVersion)
@@ -1243,8 +1280,8 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 				case VER_NT_WORKSTATION:
 					rOsInfo.m_pszWinVersion = szWindowsVista;
 					break;
-				//case VER_NT_DOMAIN_CONTROLLER:
-				//case VER_NT_SERVER:
+					//case VER_NT_DOMAIN_CONTROLLER:
+					//case VER_NT_SERVER:
 				default:
 					rOsInfo.m_pszWinVersion = szWindowsServer2008;
 					break;
@@ -1256,8 +1293,8 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 				case VER_NT_WORKSTATION:
 					rOsInfo.m_pszWinVersion = szWindows7;
 					break;
-				//case VER_NT_DOMAIN_CONTROLLER:
-				//case VER_NT_SERVER:
+					//case VER_NT_DOMAIN_CONTROLLER:
+					//case VER_NT_SERVER:
 				default:
 					rOsInfo.m_pszWinVersion = szWindowsServer2008R2;
 					break;
@@ -1276,41 +1313,43 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 					break;
 				}
 				break;
-			case 3:
-				switch (osvi.wProductType)
-				{
-				case VER_NT_WORKSTATION:
+			}
+			break;
+		}
+	}
+
+	if (deprecated_GetVersionEx) {
+		// anyway we're able to detect only client versions of OS by this method
+		switch (realMajorVersion)
+		{
+		case 6:
+			if (realMinorVersion == 3) {
+				if (osvi.wProductType == VER_NT_WORKSTATION)
 					rOsInfo.m_pszWinVersion = szWindows81;
-					break;
-					//case VER_NT_DOMAIN_CONTROLLER:
-					//case VER_NT_SERVER:
-				default:
+				else
 					rOsInfo.m_pszWinVersion = szWindowsServer2012R2;
-					break;
-				}
 				break;
 			}
-		}
-		break;
-	case 10:
-		if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
-		{
-			switch (osvi.dwMinorVersion)
-			{
-			case 0:
+		case 10:
+			if (realMinorVersion == 0) {
 				if (osvi.wProductType == VER_NT_WORKSTATION)
 					rOsInfo.m_pszWinVersion = szWindows10;
 				else
 					rOsInfo.m_pszWinVersion = szWindowsServer2016;
 				break;
-			//case N: for future releases
 			}
+			break;
+		default:
+			break;
 		}
-		break;
+		_ultot_s(realBuildVersion, rOsInfo.m_szBuildNumber, countof(rOsInfo.m_szBuildNumber), 10);
+	}
+	else
+	{
+		_ultot_s(osvi.dwBuildNumber, rOsInfo.m_szBuildNumber, countof(rOsInfo.m_szBuildNumber), 10);
 	}
 
 	_tcscpy_s(rOsInfo.m_szSPVersion, countof(rOsInfo.m_szSPVersion), osvi.szCSDVersion);
-	_ultot_s(osvi.dwBuildNumber, rOsInfo.m_szBuildNumber, countof(rOsInfo.m_szBuildNumber), 10);
 
 #ifdef _MANAGED
 	NetThunks::GetNetVersion(rOsInfo.m_szNetVersion, countof(rOsInfo.m_szNetVersion));
