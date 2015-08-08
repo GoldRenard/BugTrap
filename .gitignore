@@ -64,6 +64,7 @@ local.properties
 *.vspscc
 .builds
 **/*.dotCover
+**/thumbs.db
 
 ## TODO: If you have NuGet Package Restore enabled, uncomment this
 #**/packages/ 
@@ -163,3 +164,21 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+#################
+## Project-specific
+#################
+lib/zlib/stat-md-release/
+lib/zlib/stat-md-release-x64/
+source/Debug/
+source/Debug-x64/
+source/Release/
+source/Release-x64/
+source/UDebug/
+source/UDebug-x64/
+source/URelease/
+source/URelease-x64/
+source/NDebug/
+source/NDebug-x64/
+source/NRelease/
+source/NRelease-x64/
