@@ -1164,6 +1164,7 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 	static const TCHAR szWindows7[] = _T("Windows 7");
 	static const TCHAR szWindows8[] = _T("Windows 8");
 	static const TCHAR szWindows81[] = _T("Windows 8.1");
+	static const TCHAR szWindows10[] = _T("Windows 10");
 	static const TCHAR szWindowsServer2003[] = _T("Windows Server 2003");
 	static const TCHAR szWindowsHomeServer[] = _T("Windows Home Server");
 	static const TCHAR szWindowsServer2003R2[] = _T("Windows Server 2003 R2");
@@ -1171,6 +1172,7 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 	static const TCHAR szWindowsServer2008R2[] = _T("Windows Server 2008 R2");
 	static const TCHAR szWindowsServer2012[] = _T("Windows Server 2012");
 	static const TCHAR szWindowsServer2012R2[] = _T("Windows Server 2012 R2");
+	static const TCHAR szWindowsServer2016[] = _T("Windows Server 2016");
 
 	OSVERSIONINFOEX osvi;
 	osvi.dwOSVersionInfoSize = sizeof(osvi);
@@ -1287,6 +1289,21 @@ void CSymEngine::GetOsInfo(COsInfo& rOsInfo)
 					break;
 				}
 				break;
+			}
+		}
+		break;
+	case 10:
+		if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
+		{
+			switch (osvi.dwMinorVersion)
+			{
+			case 0:
+				if (osvi.wProductType == VER_NT_WORKSTATION)
+					rOsInfo.m_pszWinVersion = szWindows10;
+				else
+					rOsInfo.m_pszWinVersion = szWindowsServer2016;
+				break;
+			//case N: for future releases
 			}
 		}
 		break;
